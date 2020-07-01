@@ -61,7 +61,7 @@ class EnumProperty;
 class EditableEnumProperty;
 class ColorProperty;
 class PanelDockWidget;
-}
+}  // namespace rviz
 
 namespace moveit {
 namespace core {
@@ -96,13 +96,13 @@ public:
 	 * \return true on success
 	 */
 	TaskSolutionVisualization(rviz::Property* parent, rviz::Display* display);
-	virtual ~TaskSolutionVisualization();
+	~TaskSolutionVisualization() override;
 
 	virtual void update(float wall_dt, float ros_dt);
 	virtual void reset();
 
 	void onInitialize(Ogre::SceneNode* scene_node, rviz::DisplayContext* context);
-	void onRobotModelLoaded(moveit::core::RobotModelConstPtr robot_model);
+	void onRobotModelLoaded(const moveit::core::RobotModelConstPtr& robot_model);
 	void onEnable();
 	void onDisable();
 	void setName(const QString& name);
@@ -119,7 +119,7 @@ public Q_SLOTS:
 	void interruptCurrentDisplay();
 
 private Q_SLOTS:
-	void onAllAtOnceChanged(bool);
+	void onAllAtOnceChanged(bool all_at_once);
 
 	// trajectory property slots
 	void changedRobotVisualEnabled();

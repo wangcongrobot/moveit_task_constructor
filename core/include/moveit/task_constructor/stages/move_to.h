@@ -104,11 +104,11 @@ protected:
 	                 decltype(std::declval<SolutionBase>().markers()) & markers);
 	bool getPointGoal(const boost::any& goal, const moveit::core::LinkModel* link,
 	                  const planning_scene::PlanningScenePtr& scene, Eigen::Isometry3d& target_eigen,
-	                  decltype(std::declval<SolutionBase>().markers()) &);
+	                  decltype(std::declval<SolutionBase>().markers()) & /*unused*/);
 
 protected:
 	solvers::PlannerInterfacePtr planner_;
 };
-}
-}
-}
+}  // namespace stages
+}  // namespace task_constructor
+}  // namespace moveit

@@ -47,6 +47,7 @@ class QIcon;
 namespace rviz {
 class WindowManagerInterface;
 class Property;
+class BoolProperty;
 class EnumProperty;
 }
 
@@ -79,8 +80,8 @@ class TaskPanel : public rviz::Panel
 	TaskPanelPrivate* d_ptr;
 
 public:
-	TaskPanel(QWidget* parent = 0);
-	~TaskPanel();
+	TaskPanel(QWidget* parent = nullptr);
+	~TaskPanel() override;
 
 	/// add a new sub panel widget
 	void addSubPanel(SubPanel* w, const QString& title, const QIcon& icon);
@@ -125,9 +126,11 @@ protected:
 	};
 	rviz::EnumProperty* initial_task_expand;
 
+	rviz::BoolProperty* show_time_column;
+
 public:
 	TaskView(TaskPanel* parent, rviz::Property* root);
-	~TaskView();
+	~TaskView() override;
 
 	void save(rviz::Config config) override;
 	void load(const rviz::Config& config) override;
@@ -141,6 +144,7 @@ protected Q_SLOTS:
 	void onCurrentSolutionChanged(const QModelIndex& current, const QModelIndex& previous);
 	void onSolutionSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
 	void onExecCurrentSolution() const;
+	void onShowTimeChanged();
 };
 
 class GlobalSettingsWidgetPrivate;
@@ -152,9 +156,9 @@ class GlobalSettingsWidget : public SubPanel
 
 public:
 	GlobalSettingsWidget(TaskPanel* parent, rviz::Property* root);
-	~GlobalSettingsWidget();
+	~GlobalSettingsWidget() override;
 
 	void save(rviz::Config config) override;
 	void load(const rviz::Config& config) override;
 };
-}
+}  // namespace moveit_rviz_plugin

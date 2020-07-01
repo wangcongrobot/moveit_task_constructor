@@ -95,7 +95,7 @@ public:
 		}
 		bool operator<(const Priority& other) const;
 	};
-	typedef std::deque<SolutionBase*> Solutions;
+	using Solutions = std::deque<SolutionBase*>;
 
 	/// create an InterfaceState from a planning scene
 	InterfaceState(const planning_scene::PlanningScenePtr& ps);
@@ -135,7 +135,7 @@ private:
 /** Interface provides a cost-sorted list of InterfaceStates available as input for a stage. */
 class Interface : public ordered<InterfaceState*>
 {
-	typedef ordered<InterfaceState*> base_type;
+	using base_type = ordered<InterfaceState*>;
 
 public:
 	// iterators providing convinient access to stored InterfaceState
@@ -166,7 +166,7 @@ public:
 		START = FORWARD,
 		END = BACKWARD
 	};
-	typedef std::function<void(iterator it, bool updated)> NotifyFunction;
+	using NotifyFunction = std::function<void(iterator, bool)>;
 	Interface(const NotifyFunction& notify = NotifyFunction());
 
 	/// add a new InterfaceState
@@ -200,19 +200,20 @@ public:
 	inline const InterfaceState* start() const { return start_; }
 	inline const InterfaceState* end() const { return end_; }
 
+	/// Retrieve following (FORWARD) or preceding (BACKWARD) solution segments
 	template <Interface::Direction dir>
 	inline const InterfaceState::Solutions& trajectories() const;
 
 	inline void setStartState(const InterfaceState& state) {
 		// only allow setting once (by Stage)
-		assert(start_ == NULL || start_ == &state);
+		assert(start_ == nullptr || start_ == &state);
 		start_ = &state;
 		const_cast<InterfaceState&>(state).addOutgoing(this);
 	}
 
 	inline void setEndState(const InterfaceState& state) {
 		// only allow setting once (by Stage)
-		assert(end_ == NULL || end_ == &state);
+		assert(end_ == nullptr || end_ == &state);
 		end_ = &state;
 		const_cast<InterfaceState&>(state).addIncoming(this);
 	}
@@ -287,7 +288,7 @@ MOVEIT_CLASS_FORWARD(SubTrajectory)
 class SolutionSequence : public SolutionBase
 {
 public:
-	typedef std::vector<const SolutionBase*> container_type;
+	using container_type = std::vector<const SolutionBase*>;
 
 	explicit SolutionSequence() : SolutionBase() {}
 	SolutionSequence(container_type&& subsolutions, double cost = 0.0, StagePrivate* creator = nullptr)
@@ -297,6 +298,8 @@ public:
 
 	/// append all subsolutions to solution
 	void fillMessage(moveit_task_constructor_msgs::Solution& msg, Introspection* introspection) const override;
+
+	const container_type& solutions() const { return subsolutions_; }
 
 	inline const InterfaceState* internalStart() const { return subsolutions_.front()->start(); }
 	inline const InterfaceState* internalEnd() const { return subsolutions_.back()->end(); }
@@ -315,8 +318,8 @@ template <>
 inline const InterfaceState::Solutions& SolutionBase::trajectories<Interface::BACKWARD>() const {
 	return start_->incomingTrajectories();
 }
-}
-}
+}  // namespace task_constructor
+}  // namespace moveit
 
 namespace std {
 // comparison for pointers to SolutionBase: compare based on value

@@ -165,8 +165,7 @@ void export_core() {
 	bp::enum_<PropagatingEitherWay::Direction>("PropagationDirection")
 	    .value("AUTO", PropagatingEitherWay::AUTO)
 	    .value("FORWARD", PropagatingEitherWay::FORWARD)
-	    .value("BACKWARD", PropagatingEitherWay::BACKWARD)
-	    .value("BOTHWAY", PropagatingEitherWay::BOTHWAY);
+	    .value("BACKWARD", PropagatingEitherWay::BACKWARD);
 
 	bp::class_<PropagatingEitherWay, std::auto_ptr<PropagatingEitherWay>, bp::bases<Stage>, boost::noncopyable>(
 	    "PropagatingEitherWay", bp::no_init)

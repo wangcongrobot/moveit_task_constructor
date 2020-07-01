@@ -63,6 +63,8 @@
 #include <rviz/window_manager_interface.h>
 #include <rviz/panel_dock_widget.h>
 
+#include <OgreSceneNode.h>
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
@@ -205,7 +207,7 @@ void TaskSolutionVisualization::setName(const QString& name) {
 		slider_dock_panel_->setWindowTitle(name + " - Slider");
 }
 
-void TaskSolutionVisualization::onRobotModelLoaded(robot_model::RobotModelConstPtr robot_model) {
+void TaskSolutionVisualization::onRobotModelLoaded(const robot_model::RobotModelConstPtr& robot_model) {
 	// Error check
 	if (!robot_model) {
 		ROS_ERROR_STREAM_NAMED("task_solution_visualization", "No robot model found");
@@ -265,7 +267,7 @@ void TaskSolutionVisualization::changedTrail() {
 	for (std::size_t i = 0; i < trail_.size(); i++) {
 		int waypoint_i = std::min(i * stepsize, t->getWayPointCount() - 1);  // limit to last trajectory point
 		rviz::Robot* r =
-		    new rviz::Robot(trail_scene_node_, context_, "Trail Robot " + boost::lexical_cast<std::string>(i), NULL);
+		    new rviz::Robot(trail_scene_node_, context_, "Trail Robot " + boost::lexical_cast<std::string>(i), nullptr);
 		r->load(*scene_->getRobotModel()->getURDF());
 		r->setVisualVisible(robot_visual_enabled_property_->getBool());
 		r->setCollisionVisible(robot_collision_enabled_property_->getBool());
@@ -280,22 +282,22 @@ void TaskSolutionVisualization::changedTrail() {
 
 void TaskSolutionVisualization::changedRobotAlpha() {
 	robot_render_->setAlpha(robot_alpha_property_->getFloat());
-	for (std::size_t i = 0; i < trail_.size(); ++i)
-		trail_[i]->setAlpha(robot_alpha_property_->getFloat());
+	for (auto& waypoint : trail_)
+		waypoint->setAlpha(robot_alpha_property_->getFloat());
 }
 
 void TaskSolutionVisualization::changedRobotVisualEnabled() {
 	robot_render_->setVisualVisible(robot_visual_enabled_property_->getBool());
 	renderCurrentWayPoint();
-	for (std::size_t i = 0; i < trail_.size(); ++i)
-		trail_[i]->setVisualVisible(robot_visual_enabled_property_->getBool());
+	for (auto& waypoint : trail_)
+		waypoint->setVisualVisible(robot_visual_enabled_property_->getBool());
 }
 
 void TaskSolutionVisualization::changedRobotCollisionEnabled() {
 	robot_render_->setCollisionVisible(robot_collision_enabled_property_->getBool());
 	renderCurrentWayPoint();
-	for (std::size_t i = 0; i < trail_.size(); ++i)
-		trail_[i]->setCollisionVisible(robot_collision_enabled_property_->getBool());
+	for (auto& waypoint : trail_)
+		waypoint->setCollisionVisible(robot_collision_enabled_property_->getBool());
 }
 
 void TaskSolutionVisualization::onEnable() {

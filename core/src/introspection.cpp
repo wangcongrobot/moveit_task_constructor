@@ -133,9 +133,10 @@ void Introspection::registerSolution(const SolutionBase& s) {
 
 void Introspection::fillSolution(moveit_task_constructor_msgs::Solution& msg, const SolutionBase& s) {
 	s.fillMessage(msg, this);
+	s.start()->scene()->getPlanningSceneMsg(msg.start_scene);
+
 	msg.process_id = impl->process_id_;
 	msg.task_id = impl->task_->id();
-	s.start()->scene()->getPlanningSceneMsg(msg.start_scene);
 }
 
 void Introspection::publishSolution(const SolutionBase& s) {
@@ -198,12 +199,13 @@ void Introspection::fillStageStatistics(const Stage& stage, moveit_task_construc
 	for (const auto& solution : stage.failures())
 		s.failed.push_back(solutionId(*solution));
 
+	s.total_compute_time = stage.getTotalComputeTime();
 	s.num_failed = stage.numFailures();
 }
 
 moveit_task_constructor_msgs::TaskDescription&
 Introspection::fillTaskDescription(moveit_task_constructor_msgs::TaskDescription& msg) {
-	ContainerBase::StageCallback stageProcessor = [this, &msg](const Stage& stage, int) -> bool {
+	ContainerBase::StageCallback stage_processor = [this, &msg](const Stage& stage, unsigned int /*depth*/) -> bool {
 		// this method is called for each child stage of a given parent
 		moveit_task_constructor_msgs::StageDescription desc;
 		desc.id = stageId(&stage);
@@ -230,7 +232,7 @@ Introspection::fillTaskDescription(moveit_task_constructor_msgs::TaskDescription
 	};
 
 	msg.stages.clear();
-	impl->task_->stages()->traverseRecursively(stageProcessor);
+	impl->task_->stages()->traverseRecursively(stage_processor);
 
 	msg.id = impl->task_->id();
 	msg.process_id = impl->process_id_;
@@ -239,7 +241,7 @@ Introspection::fillTaskDescription(moveit_task_constructor_msgs::TaskDescription
 
 moveit_task_constructor_msgs::TaskStatistics&
 Introspection::fillTaskStatistics(moveit_task_constructor_msgs::TaskStatistics& msg) {
-	ContainerBase::StageCallback stageProcessor = [this, &msg](const Stage& stage, int) -> bool {
+	ContainerBase::StageCallback stage_processor = [this, &msg](const Stage& stage, unsigned int /*depth*/) -> bool {
 		// this method is called for each child stage of a given parent
 		moveit_task_constructor_msgs::StageStatistics stat;  // create new Stage msg
 		stat.id = stageId(&stage);
@@ -251,11 +253,11 @@ Introspection::fillTaskStatistics(moveit_task_constructor_msgs::TaskStatistics& 
 	};
 
 	msg.stages.clear();
-	impl->task_->stages()->traverseRecursively(stageProcessor);
+	impl->task_->stages()->traverseRecursively(stage_processor);
 
 	msg.id = impl->task_->id();
 	msg.process_id = impl->process_id_;
 	return msg;
 }
-}
-}
+}  // namespace task_constructor
+}  // namespace moveit

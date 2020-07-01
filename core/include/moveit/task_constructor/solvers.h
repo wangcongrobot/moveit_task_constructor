@@ -1,8 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2017, Bielefeld University
- *  Copyright (c) 2017, Hamburg University
+ *  Copyright (c) 2020, Hamburg University
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -15,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Bielefeld University nor the names of its
+ *   * Neither the name of the copyright holder nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -33,32 +32,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Authors: Michael Goerner, Luca Lach, Robert Haschke
-   Desc:    Generator Stage to fetch the current PlanningScene state
+/* Author: Michael 'v4hn' Goerner
+   Desc:   collective include of solvers
 */
 
 #pragma once
 
-#include <moveit/task_constructor/stage.h>
-
-namespace moveit {
-namespace task_constructor {
-namespace stages {
-
-/** Fetch the current PlanningScene state via get_planning_scene service */
-class CurrentState : public Generator
-{
-public:
-	CurrentState(const std::string& name = "current state");
-
-	void init(const moveit::core::RobotModelConstPtr& robot_model) override;
-	bool canCompute() const override;
-	void compute() override;
-
-protected:
-	moveit::core::RobotModelConstPtr robot_model_;
-	planning_scene::PlanningScenePtr scene_;
-};
-}  // namespace stages
-}  // namespace task_constructor
-}  // namespace moveit
+#include "solvers/cartesian_path.h"
+#include "solvers/joint_interpolation.h"
+#include "solvers/pipeline_planner.h"
