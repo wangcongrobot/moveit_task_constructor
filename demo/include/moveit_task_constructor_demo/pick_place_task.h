@@ -48,6 +48,7 @@
 #include <moveit/task_constructor/stages/connect.h>
 #include <moveit/task_constructor/stages/current_state.h>
 #include <moveit/task_constructor/stages/generate_grasp_pose.h>
+#include <moveit/task_constructor/stages/generic_grasp_pose.h>
 #include <moveit/task_constructor/stages/generate_pose.h>
 #include <moveit/task_constructor/stages/generate_place_pose.h>
 #include <moveit/task_constructor/stages/modify_planning_scene.h>

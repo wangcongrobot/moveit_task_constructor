@@ -195,13 +195,21 @@ void PickPlaceTask::init() {
 		 ***************************************************/
 		{
 			// Sample grasp pose
-			auto stage = std::make_unique<stages::GenerateGraspPose>("generate grasp pose");
+			// auto stage = std::make_unique<stages::GenerateGraspPose>("generate grasp pose");
+			// stage->properties().configureInitFrom(Stage::PARENT);
+			// stage->properties().set("marker_ns", "grasp_pose");
+			// stage->setPreGraspPose(hand_open_pose_);
+			// stage->setObject(object);
+			// stage->setAngleDelta(M_PI / 12);
+			// stage->setMonitoredStage(current_state_ptr);  // Hook into current state
+
+      auto stage = std::make_unique<stages::GraspPose>("generate grasp pose");
 			stage->properties().configureInitFrom(Stage::PARENT);
 			stage->properties().set("marker_ns", "grasp_pose");
 			stage->setPreGraspPose(hand_open_pose_);
 			stage->setObject(object);
-			stage->setAngleDelta(M_PI / 12);
 			stage->setMonitoredStage(current_state_ptr);  // Hook into current state
+
 
 			// Compute IK
 			auto wrapper = std::make_unique<stages::ComputeIK>("grasp pose IK", std::move(stage));
