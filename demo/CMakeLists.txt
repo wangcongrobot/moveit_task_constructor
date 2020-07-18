@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(moveit_task_constructor_demo)
 
-add_compile_options(-std=c++14)
+add_compile_options(-std=c++14 -fdiagnostics-color=always)
 
 find_package(catkin REQUIRED COMPONENTS
-	roscpp
 	moveit_core
-	moveit_task_constructor_core
 	moveit_ros_planning_interface
+	moveit_task_constructor_core
+	roscpp
 	rosparam_shortcuts
 )
 
@@ -27,12 +27,16 @@ target_link_libraries(modular ${catkin_LIBRARIES})
 add_executable(pick_place_demo src/pick_place_demo.cpp src/pick_place_task.cpp)
 target_link_libraries(pick_place_demo ${catkin_LIBRARIES})
 
-install(TARGETS cartesian modular pick_place_demo
+add_executable(pick_demo src/pick_demo.cpp src/pick_task.cpp)
+target_link_libraries(pick_demo ${catkin_LIBRARIES})
+
+
+install(TARGETS cartesian modular pick_demo pick_place_demo
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch config
+install(DIRECTORY config launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
