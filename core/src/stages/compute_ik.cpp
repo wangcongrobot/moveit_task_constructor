@@ -66,6 +66,8 @@ ComputeIK::ComputeIK(const std::string& name, Stage::pointer&& child) : WrapperB
 	// ik_frame and target_pose are read from the interface
 	p.declare<geometry_msgs::PoseStamped>("ik_frame", "frame to be moved towards goal pose");
 	p.declare<geometry_msgs::PoseStamped>("target_pose", "goal pose for ik frame");
+	p.declare<double>("min_distance", "minimum distance to move");
+
 }
 
 void ComputeIK::setIKFrame(const Eigen::Isometry3d& pose, const std::string& link) {
@@ -194,6 +196,20 @@ void ComputeIK::init(const moveit::core::RobotModelConstPtr& robot_model) {
 	const moveit::core::JointModelGroup* eef_jmg = nullptr;
 	const moveit::core::JointModelGroup* jmg = nullptr;
 	std::string msg;
+
+	// std::cout << props.get<std::string>("eef") << std::endl;
+	// std::cout << props.get<double>("min_distance") << std::endl;
+
+	// std::cout << props.get<std::set<std::string>>("forwarded_properties").size() << std::endl;
+	// std::set<std::string> fprops = props.get<std::set<std::string>>("forwarded_properties");
+	// for (std::set<std::string>::iterator it=fprops.begin(); it!=fprops.end(); ++it)
+	// {
+	// 	std::cout << ' ' << *it;
+	// }
+	// std::cout<<"\n";
+
+
+
 
 	if (!validateEEF(props, robot_model, eef_jmg, &msg))
 		errors.push_back(*this, msg);

@@ -36,11 +36,25 @@ PickPlaceBase::PickPlaceBase(Stage::pointer&& grasp_stage, const std::string& na
 		return pose;
 	};
 
+  // properties provided by the grasp generator via its Interface or its PropertyMap
+	// const std::set<std::string>& grasp_prop_names = { "direction", "min_distance", "max_distance" };
+  // // Goal: forward property "direction" to MoveRelative approach stage
+  // grasp_stage->setForwardedProperties(grasp_prop_names);
+
+  // Approach/Retract object
 	{
 		auto approach = std::make_unique<MoveRelative>(forward ? "approach object" : "retract", cartesian_solver_);
 		PropertyMap& p = approach->properties();
 		p.property("group").configureInitFrom(Stage::PARENT, "eef_parent_group");
 		p.property("ik_frame").configureInitFrom(Stage::PARENT, init_ik_frame);
+
+    // p.configureInitFrom(Stage::PARENT, {"direction", "min_distance", "max_distance"});
+
+    // std::cout << grasp_stage->properties().get<double>("min_distance") << std::endl;
+    // p.set("direction", grasp_stage->properties().get("direction"));
+    // p.set("min_distance", grasp_stage->properties().get<double>("min_distance"));
+    // p.set("max_distance", grasp_stage->properties().get<double>("max_distance"));
+
 		p.set("marker_ns", std::string(forward ? "approach" : "retract"));
 		approach_stage_ = approach.get();
 		insert(std::move(approach), insertion_position);
@@ -50,6 +64,7 @@ PickPlaceBase::PickPlaceBase(Stage::pointer&& grasp_stage, const std::string& na
 	grasp_stage->properties().configureInitFrom(Stage::PARENT, { "eef", "object" });
 	insert(std::move(grasp_stage), insertion_position);
 
+  // Place/Lift object
 	{
 		auto lift = std::make_unique<MoveRelative>(forward ? "lift object" : "place object", cartesian_solver_);
 		PropertyMap& p = lift->properties();
@@ -60,6 +75,7 @@ PickPlaceBase::PickPlaceBase(Stage::pointer&& grasp_stage, const std::string& na
 		insert(std::move(lift), insertion_position);
 	}
 }
+
 
 void PickPlaceBase::init(const moveit::core::RobotModelConstPtr& robot_model) {
 	// inherit properties from parent
@@ -79,6 +95,7 @@ void PickPlaceBase::init(const moveit::core::RobotModelConstPtr& robot_model) {
 	SerialContainer::init(robot_model);
 }
 
+
 void PickPlaceBase::setApproachRetract(const geometry_msgs::TwistStamped& motion, double min_distance,
                                        double max_distance) {
 	auto& p = approach_stage_->properties();
@@ -87,12 +104,14 @@ void PickPlaceBase::setApproachRetract(const geometry_msgs::TwistStamped& motion
 	p.set("max_distance", max_distance);
 }
 
+
 void PickPlaceBase::setLiftPlace(const geometry_msgs::TwistStamped& motion, double min_distance, double max_distance) {
 	auto& p = lift_stage_->properties();
 	p.set("direction", motion);
 	p.set("min_distance", min_distance);
 	p.set("max_distance", max_distance);
 }
+
 
 void PickPlaceBase::setLiftPlace(const std::map<std::string, double>& joints) {
 	auto& p = lift_stage_->properties();

@@ -43,6 +43,8 @@
 
 #include <Eigen/Geometry>
 #include <eigen_conversions/eigen_msg.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 namespace moveit {
 namespace task_constructor {
@@ -56,6 +58,16 @@ GenerateGraspPose::GenerateGraspPose(const std::string& name) : GeneratePose(nam
 
 	p.declare<boost::any>("pregrasp", "pregrasp posture");
 	p.declare<boost::any>("grasp", "grasp posture");
+
+	// approach/lift directions
+	p.declare<boost::any>("direction", "motion specification");
+	// register actual types
+	PropertySerializer<geometry_msgs::TwistStamped>();
+	PropertySerializer<geometry_msgs::Vector3Stamped>();
+
+	// min/max displacement for approach/lift of object
+	p.declare<double>("min_distance", -1.0, "minimum distance to move");
+	p.declare<double>("max_distance", 0.0, "maximum distance to move");
 }
 
 void GenerateGraspPose::init(const core::RobotModelConstPtr& robot_model) {
