@@ -1,0 +1,8 @@
+# goal sent to client
+string action_name
+---
+# result sent to server
+geometry_msgs/PoseStamped grasp_candidate
+---
+# feedback sent to server
+string feedback_state
