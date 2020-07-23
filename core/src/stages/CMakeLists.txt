@@ -3,6 +3,7 @@ add_library(${PROJECT_NAME}_stages
 	${PROJECT_INCLUDE}/stages/fix_collision_objects.h
 
 	${PROJECT_INCLUDE}/stages/current_state.h
+	${PROJECT_INCLUDE}/stages/deep_grasp_generator.h
 	${PROJECT_INCLUDE}/stages/fixed_state.h
 	${PROJECT_INCLUDE}/stages/fixed_cartesian_poses.h
 	${PROJECT_INCLUDE}/stages/generate_pose.h
@@ -22,6 +23,7 @@ add_library(${PROJECT_NAME}_stages
 	fix_collision_objects.cpp
 
 	current_state.cpp
+	deep_grasp_generator.cpp
 	fixed_state.cpp
 	fixed_cartesian_poses.cpp
 	generate_pose.cpp
