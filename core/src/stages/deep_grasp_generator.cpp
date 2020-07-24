@@ -48,9 +48,9 @@
  namespace task_constructor {
  namespace stages {
 
- DeepGraspPose::DeepGraspPose(ros::NodeHandle& nh, const std::string& name)
+ DeepGraspPose::DeepGraspPose(const std::string& name)
                 : GeneratePose(name),
-                  client_(nh, "sample_grasps", true) {
+                  client_("sample_grasps", true) {
  	auto& p = properties();
  	p.declare<std::string>("eef", "name of end-effector");
  	p.declare<std::string>("object");
@@ -119,35 +119,36 @@
     return;
   }
 
-  geometry_msgs::PoseStamped target_pose_msg;
+  // sampled grasps
+  std::vector<geometry_msgs::PoseStamped> grasp_candidates;
+  // the cost of each grasp
+  std::vector<double> scores;
+
+  // TODO(bostoncleek): add timeout to connection ?
+  ROS_INFO("Waiting for grasp detection action server to start...");
+  client_.waitForServer();
+
+  // test server connection
+  if(!client_.isServerConnected())
+  {
+    ROS_ERROR("Grasp detection action server not connected!");
+  }
 
   moveit_task_constructor_msgs::GenerateDeepGraspPoseGoal goal;
   goal.action_name = "generate_grasps";
   client_.sendGoal(goal);
 
-  ROS_WARN("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-  std::cout << client_.isServerConnected() << std::endl;
-
-  client_.waitForResult(ros::Duration(5.0));
+  // get result within timeout
+  // TODO(bostoncleek): select timeout
+  client_.waitForResult();
   if (client_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
-    printf("Done!");
-
-    moveit_task_constructor_msgs::GenerateDeepGraspPoseResultConstPtr grasp_result_ptr;
-    grasp_result_ptr = client_.getResult();
-
-    target_pose_msg = grasp_result_ptr->grasp_candidate;
-
+    grasp_candidates = client_.getResult()->grasp_candidates;
+    scores = client_.getResult()->scores;
   }
-  printf("Current State: %s\n", client_.getState().toString().c_str());
 
-  ROS_WARN("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-  std::cout << target_pose_msg << std::endl;
-
-  // target_pose_msg.header.frame_id = "panda_link0";
-  // target_pose_msg.pose.position.x = 0.5;
-  // target_pose_msg.pose.position.y = -0.25;
-  // target_pose_msg.pose.position.z = 0.20;
+  ROS_INFO("Grasp Generator State: %s", client_.getState().toString().c_str());
+  ROS_WARN("Number of grasp candidates: %lu", grasp_candidates.size());
 
 
  	planning_scene::PlanningScenePtr scene = upstream_solutions_.pop()->end()->scene()->diff();
@@ -160,19 +161,27 @@
  	robot_state::RobotState& robot_state = scene->getCurrentStateNonConst();
  	robot_state.setToDefaultValues(jmg, props.get<std::string>("pregrasp"));
 
+  for(unsigned int i = 0; i < grasp_candidates.size(); i++)
+  {
+    // Do not use grasps with score < 0
+    // Grasp is selected based on cost not score
+    // Invert score to represent grasp with lowest cost
+    if (scores.at(i) > 0.0)
+    {
+      InterfaceState state(scene);
+      state.properties().set("target_pose", grasp_candidates.at(i));
+    	props.exposeTo(state.properties(), { "pregrasp", "grasp" });
 
-	InterfaceState state(scene);
-	state.properties().set("target_pose", target_pose_msg);
-	props.exposeTo(state.properties(), { "pregrasp", "grasp" });
+    	SubTrajectory trajectory;
+    	trajectory.setCost(static_cast<double>(1.0 / scores.at(i)));
+    	trajectory.setComment(std::to_string(i));
 
-	SubTrajectory trajectory;
-	trajectory.setCost(0.0);
-	trajectory.setComment(std::to_string(0.0));
+    	// add frame at target pose
+      rviz_marker_tools::appendFrame(trajectory.markers(), grasp_candidates.at(i), 0.1, "grasp frame");
 
-	// add frame at target pose
-	rviz_marker_tools::appendFrame(trajectory.markers(), target_pose_msg, 0.1, "grasp frame");
-
-  spawn(std::move(state), std::move(trajectory));
+      spawn(std::move(state), std::move(trajectory));
+    }
+  }
  }
  }  // namespace stages
  }  // namespace task_constructor
