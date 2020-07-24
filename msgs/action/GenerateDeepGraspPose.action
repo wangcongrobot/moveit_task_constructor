@@ -2,7 +2,8 @@
 string action_name
 ---
 # result sent to server
-geometry_msgs/PoseStamped grasp_candidate
+geometry_msgs/PoseStamped[] grasp_candidates
+float64[] scores
 ---
 # feedback sent to server
 string feedback_state
