@@ -1,4 +1,5 @@
 add_library(${PROJECT_NAME}
+	${PROJECT_INCLUDE}/action_base.h
 	${PROJECT_INCLUDE}/container.h
 	${PROJECT_INCLUDE}/container_p.h
 	${PROJECT_INCLUDE}/cost_queue.h
