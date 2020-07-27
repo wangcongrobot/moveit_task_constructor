@@ -34,7 +34,7 @@
     Desc:   Grasp generator stage using deep learning based grasp synthesizers
  */
 
- #include <moveit/task_constructor/stages/deep_grasp_generator.h>
+ #include <moveit/task_constructor/stages/gpd_generator.h>
  #include <moveit/task_constructor/storage.h>
  #include <moveit/task_constructor/marker_tools.h>
  #include <rviz_marker_tools/marker_creation.h>
