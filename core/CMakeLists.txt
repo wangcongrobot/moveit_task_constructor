@@ -28,6 +28,8 @@ catkin_package(
 		visualization_msgs
 )
 
+include_directories(${catkin_INCLUDE_DIRS})
+
 if ("${CMAKE_VERSION}" VERSION_LESS "3.1")
 	add_compile_options(-std=c++14)
 else ()
