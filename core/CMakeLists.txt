@@ -28,7 +28,17 @@ catkin_package(
 		visualization_msgs
 )
 
+<<<<<<< HEAD
 set(CMAKE_CXX_STANDARD 14)
+=======
+include_directories(${catkin_INCLUDE_DIRS})
+
+if ("${CMAKE_VERSION}" VERSION_LESS "3.1")
+	add_compile_options(-std=c++14)
+else ()
+	set(CMAKE_CXX_STANDARD 14)
+endif ()
+>>>>>>> catkin_lint error fixed
 
 # check for MOVEIT_MASTER
 include(CheckIncludeFileCXX)
