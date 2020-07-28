@@ -2,6 +2,7 @@ add_library(${PROJECT_NAME}_stages
 	${PROJECT_INCLUDE}/stages/modify_planning_scene.h
 	${PROJECT_INCLUDE}/stages/fix_collision_objects.h
 
+	${PROJECT_INCLUDE}/stages/action_base.h
 	${PROJECT_INCLUDE}/stages/current_state.h
 	${PROJECT_INCLUDE}/stages/gpd_generator.h
 	${PROJECT_INCLUDE}/stages/fixed_state.h
@@ -28,7 +29,6 @@ add_library(${PROJECT_NAME}_stages
 	generate_pose.cpp
 	generate_grasp_pose.cpp
 	generate_place_pose.cpp
-	gpd_generator.cpp
 	compute_ik.cpp
 	predicate_filter.cpp
 
