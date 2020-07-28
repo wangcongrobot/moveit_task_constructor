@@ -44,6 +44,7 @@
 
 namespace moveit {
 namespace task_constructor {
+namespace stages {
 
 /**
 * @brief Interface allowing stages to use a simple action client
@@ -54,22 +55,29 @@ namespace task_constructor {
 template<class ActionSpec>
 class ActionBase
 {
-private:
+protected:
   ACTION_DEFINITION(ActionSpec);
 
 public:
   /**
   * @brief Constructor
-  * @param name - action name
+  * @param action_name - action namespace
   * @param server_timeout - connection to server time out (0 is considered infinite timeout)
   * @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
   * @param spin_thread - spins a thread to service this action's subscriptions
   * @details Initialize the action client and time out parameters
   */
-  ActionBase(const std::string &name,
+  ActionBase(const std::string &action_name,
              double server_timeout = 0.0,
              double goal_timeout = 0.0,
-             bool spin_thread = true);
+             bool spin_thread = true)
+             : action_name_(action_name), server_timeout_(server_timeout), goal_timeout_(goal_timeout)  {
+
+  clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(action_name, spin_thread));
+  }
+
+  // ActionBase(const std::string &action_name) : action_name_(action_name) {};
+  // ActionBase() {}
 
   /* @brief Destructor */
   virtual ~ActionBase() = default;
@@ -89,14 +97,16 @@ public:
   * @param result - pointer to result message
   */
   virtual void doneCallback(const actionlib::SimpleClientGoalState& state,
-                            const ActionResultConstPtr &result) = 0;
+                            const ResultConstPtr &result) = 0;
 
 protected:
- std::unique_ptr<actionlib::SimpleActionClient<ActionSpec>> clientPtr_;   // action client
- ActionGoal goal_;                                                        // goal message
- double server_timeout_, goal_timeout_;                                   // connection and goal completed time out
+  std::string action_name_;
+  std::unique_ptr<actionlib::SimpleActionClient<ActionSpec>> clientPtr_;   // action client
+  ActionGoal goal_;                                                        // goal message
+  double server_timeout_, goal_timeout_;                                   // connection and goal completed time out
 };
 
 
-} // namespace task_constructor
-} // namespace moveit
+}  // namespace stages
+}  // namespace task_constructor
+}  // namespace moveit
