@@ -62,22 +62,23 @@ public:
   /**
   * @brief Constructor
   * @param action_name - action namespace
-  * @param server_timeout - connection to server time out (0 is considered infinite timeout)
-  * @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
   * @param spin_thread - spins a thread to service this action's subscriptions
+  * @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
+  * @param server_timeout - connection to server time out (0 is considered infinite timeout)
   * @details Initialize the action client and time out parameters
   */
   ActionBase(const std::string &action_name,
-             double server_timeout = 0.0,
-             double goal_timeout = 0.0,
-             bool spin_thread = true)
-             : action_name_(action_name), server_timeout_(server_timeout), goal_timeout_(goal_timeout)  {
+             bool spin_thread,
+             double goal_timeout,
+             double server_timeout);
 
-  clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(action_name, spin_thread));
-  }
-
-  // ActionBase(const std::string &action_name) : action_name_(action_name) {};
-  // ActionBase() {}
+  /**
+  * @brief Constructor
+  * @param action_name - action namespace
+  * @param spin_thread - spins a thread to service this action's subscriptions
+  * @details Initialize the action client and time out parameters to infinity
+  */
+  ActionBase(const std::string &action_name, bool spin_thread);
 
   /* @brief Destructor */
   virtual ~ActionBase() = default;
@@ -100,12 +101,32 @@ public:
                             const ResultConstPtr &result) = 0;
 
 protected:
-  std::string action_name_;
+  ros::NodeHandle nh_;
+  std::string action_name_;                                                // action name space
   std::unique_ptr<actionlib::SimpleActionClient<ActionSpec>> clientPtr_;   // action client
-  ActionGoal goal_;                                                        // goal message
   double server_timeout_, goal_timeout_;                                   // connection and goal completed time out
 };
 
+
+template<class ActionSpec>
+ActionBase<ActionSpec>::ActionBase(const std::string &action_name,
+                                   bool spin_thread,
+                                   double goal_timeout,
+                                   double server_timeout)
+           : action_name_(action_name), server_timeout_(server_timeout), goal_timeout_(goal_timeout){
+  clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(nh_, action_name_, spin_thread));
+
+  if (server_timeout_ < 0.0 || goal_timeout < 0.0){
+    ROS_WARN("Timeouts cannot be negative");
+    }
+}
+
+
+template<class ActionSpec>
+ActionBase<ActionSpec>::ActionBase(const std::string &action_name, bool spin_thread)
+           : action_name_(action_name), server_timeout_(0.0), goal_timeout_(0.0){
+clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(nh_, action_name_, spin_thread));
+}
 
 }  // namespace stages
 }  // namespace task_constructor
