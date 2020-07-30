@@ -129,12 +129,12 @@ DeepGraspPose<ActionSpec>::DeepGraspPose(const std::string& action_name,
 										 found_candidates_(false){
 
  auto& p = properties();
- p.template declare<std::string>("eef", "name of end-effector");
- p.template declare<std::string>("object");
- p.template declare<double>("angle_delta", 0.1, "angular steps (rad)");
+ p.declare<std::string>("eef", "name of end-effector");
+ p.declare<std::string>("object");
+ p.declare<double>("angle_delta", 0.1, "angular steps (rad)");
 
- p.template declare<boost::any>("pregrasp", "pregrasp posture");
- p.template declare<boost::any>("grasp", "grasp posture");
+ p.declare<boost::any>("pregrasp", "pregrasp posture");
+ p.declare<boost::any>("grasp", "grasp posture");
 
  ROS_INFO_NAMED(LOGNAME, "Waiting for connection to grasp generation action server...");
  ActionBaseT::clientPtr_->waitForServer(ros::Duration(ActionBaseT::server_timeout_));
@@ -236,21 +236,21 @@ void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model
 	const auto& props = properties();
 
 	// check angle_delta
-	if (props.template get<double>("angle_delta") == 0.){
+	if (props.get<double>("angle_delta") == 0.){
 		errors.push_back(*this, "angle_delta must be non-zero");
 	}
 
 	// check availability of object
-	props.template get<std::string>("object");
+	props.get<std::string>("object");
 	// check availability of eef
-	const std::string& eef = props.template get<std::string>("eef");
+	const std::string& eef = props.get<std::string>("eef");
 	if (!robot_model->hasEndEffector(eef)){
 		errors.push_back(*this, "unknown end effector: " + eef);
 	}
 	else {
 		// check availability of eef pose
 		const moveit::core::JointModelGroup* jmg = robot_model->getEndEffector(eef);
-		const std::string& name = props.template get<std::string>("pregrasp");
+		const std::string& name = props.get<std::string>("pregrasp");
 		std::map<std::string, double> m;
 		if (!jmg->getVariableDefaultPositions(name, m)){
 			errors.push_back(*this, "unknown end effector pose: " + name);
@@ -273,11 +273,11 @@ void DeepGraspPose<ActionSpec>::compute(){
 
 	// set end effector pose
 	const auto& props = properties();
-	const std::string& eef = props.template get<std::string>("eef");
+	const std::string& eef = props.get<std::string>("eef");
 	const moveit::core::JointModelGroup* jmg = scene->getRobotModel()->getEndEffector(eef);
 
 	robot_state::RobotState& robot_state = scene->getCurrentStateNonConst();
-	robot_state.setToDefaultValues(jmg, props.template get<std::string>("pregrasp"));
+	robot_state.setToDefaultValues(jmg, props.get<std::string>("pregrasp"));
 
 
 	// compose/send goal
