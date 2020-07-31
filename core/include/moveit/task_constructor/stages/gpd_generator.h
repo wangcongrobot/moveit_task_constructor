@@ -45,6 +45,7 @@
 
 #include <memory>
 #include <functional>
+#include <iostream>
 
 
 namespace moveit {
@@ -160,9 +161,7 @@ bool DeepGraspPose<ActionSpec>::monitorGoal(){
 
 	// monitor timeout
 	bool monitor_timeout = ActionBaseT::goal_timeout_ > std::numeric_limits<double>::epsilon() ? true : false;
-
-	double curr_time = ros::Time::now().toSec();
-	double timeout_time = curr_time + ActionBaseT::goal_timeout_;
+	double timeout_time = ros::Time::now().toSec() + ActionBaseT::goal_timeout_;
 
 	while(ActionBaseT::nh_.ok())
 	{
@@ -172,8 +171,7 @@ bool DeepGraspPose<ActionSpec>::monitorGoal(){
 			break;
 		}
 
-		curr_time = ros::Time::now().toSec();
-		if (curr_time > timeout_time && monitor_timeout){
+		if (ros::Time::now().toSec() > timeout_time && monitor_timeout){
 				ActionBaseT::clientPtr_->cancelGoal();
 				ROS_ERROR_NAMED(LOGNAME, "Grasp pose generator time out reached");
 				return false;
@@ -193,14 +191,14 @@ void DeepGraspPose<ActionSpec>::activeCallback(){
 
 template<class ActionSpec>
 void DeepGraspPose<ActionSpec>::feedbackCallback(const FeedbackConstPtr &feedback){
-	// TODO: Check if costs are positive ?
-
 	// each candidate should have a cost
 	if (feedback->grasp_candidates.size() != feedback->costs.size()){
 		ROS_ERROR_NAMED(LOGNAME, "Invalid input: each grasp candidate needs an associated cost");
 	}
 	else{
-		ROS_INFO_NAMED(LOGNAME, "Grasp generated feedback received");
+		ROS_INFO_NAMED(LOGNAME, "Grasp generated feedback received %lu candidates: ", feedback->grasp_candidates.size());
+
+		found_candidates_ = true;
 
 		grasp_candidates_.resize(feedback->grasp_candidates.size());
 		costs_.resize(feedback->costs.size());
@@ -215,7 +213,6 @@ template<class ActionSpec>
 void DeepGraspPose<ActionSpec>::doneCallback(const actionlib::SimpleClientGoalState& state,
 													const ResultConstPtr &result){
 	if (state == actionlib::SimpleClientGoalState::SUCCEEDED){
-		found_candidates_ = true;
 		ROS_INFO_NAMED(LOGNAME, "Found grasp candidates (result): %s", result->grasp_state.c_str());
 	}
 	else{
@@ -268,7 +265,6 @@ void DeepGraspPose<ActionSpec>::compute(){
 	if (upstream_solutions_.empty()){
     return;
   }
-
 	planning_scene::PlanningScenePtr scene = upstream_solutions_.pop()->end()->scene()->diff();
 
 	// set end effector pose
@@ -279,13 +275,13 @@ void DeepGraspPose<ActionSpec>::compute(){
 	robot_state::RobotState& robot_state = scene->getCurrentStateNonConst();
 	robot_state.setToDefaultValues(jmg, props.get<std::string>("pregrasp"));
 
-
 	// compose/send goal
 	composeGoal();
 
 	// monitor feedback/results
 	// blocking function untill timeout reached or results received
 	if (monitorGoal()){
+		// ROS_WARN_NAMED(LOGNAME, "number %lu: ",grasp_candidates_.size());
 		for(unsigned int i = 0; i < grasp_candidates_.size(); i++)
 	  {
 	    InterfaceState state(scene);
