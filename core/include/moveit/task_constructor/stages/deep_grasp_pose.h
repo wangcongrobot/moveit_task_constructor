@@ -30,9 +30,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
- /* Author: Boston Cleek
-    Desc:   Grasp generator stage using deep learning based grasp synthesizers
- */
+/* Author: Boston Cleek
+   Desc:   Grasp generator stage using deep learning based grasp synthesizers
+*/
 
 #pragma once
 
@@ -47,23 +47,20 @@
 #include <functional>
 #include <iostream>
 
-
 namespace moveit {
 namespace task_constructor {
 namespace stages {
 
 constexpr char LOGNAME[] = "deep_grasp_generator";
 
-
 /**
 * @brief Generate grasp candidates using deep learning approaches
 * @param ActionSpec - action message (action message name + "ACTION")
 * @details Interfaces with a deep learning based grasp library using a action client
 */
-template<class ActionSpec>
+template <class ActionSpec>
 class DeepGraspPose : public GeneratePose, ActionBase<ActionSpec>
 {
-
 private:
 	typedef ActionBase<ActionSpec> ActionBaseT;
 	ACTION_DEFINITION(ActionSpec);
@@ -77,10 +74,8 @@ public:
   * @param server_timeout - connection to server time out (0 is considered infinite timeout)
 	* @details Initialize the client and connect to server
 	*/
-	DeepGraspPose(const std::string& action_name,
-		            const std::string& stage_name = "generate grasp pose",
-							  double goal_timeout = 0.0,
-							  double server_timeout = 0.0);
+	DeepGraspPose(const std::string& action_name, const std::string& stage_name = "generate grasp pose",
+	              double goal_timeout = 0.0, double server_timeout = 0.0);
 
 	/**
 	* @brief Composes the action goal and sends to server
@@ -96,8 +91,8 @@ public:
 	bool monitorGoal();
 
 	void activeCallback() override;
-	void feedbackCallback(const FeedbackConstPtr &feedback) override;
-	void doneCallback(const actionlib::SimpleClientGoalState& state, const ResultConstPtr &result) override;
+	void feedbackCallback(const FeedbackConstPtr& feedback) override;
+	void doneCallback(const actionlib::SimpleClientGoalState& state, const ResultConstPtr& result) override;
 
 	void init(const core::RobotModelConstPtr& robot_model) override;
 	void compute() override;
@@ -119,83 +114,70 @@ private:
 	std::vector<double> costs_;
 };
 
+template <class ActionSpec>
+DeepGraspPose<ActionSpec>::DeepGraspPose(const std::string& action_name, const std::string& stage_name,
+                                         double goal_timeout, double server_timeout)
+  : GeneratePose(stage_name), ActionBaseT(action_name, false, goal_timeout, server_timeout), found_candidates_(false) {
+	auto& p = properties();
+	p.declare<std::string>("eef", "name of end-effector");
+	p.declare<std::string>("object");
+	p.declare<double>("angle_delta", 0.1, "angular steps (rad)");
 
-template<class ActionSpec>
-DeepGraspPose<ActionSpec>::DeepGraspPose(const std::string& action_name,
-	                                       const std::string& stage_name,
-																				 double goal_timeout,
-																				 double server_timeout)
-									:  GeneratePose(stage_name),
-									   ActionBaseT(action_name, false, goal_timeout, server_timeout),
-										 found_candidates_(false){
+	p.declare<boost::any>("pregrasp", "pregrasp posture");
+	p.declare<boost::any>("grasp", "grasp posture");
 
- auto& p = properties();
- p.declare<std::string>("eef", "name of end-effector");
- p.declare<std::string>("object");
- p.declare<double>("angle_delta", 0.1, "angular steps (rad)");
-
- p.declare<boost::any>("pregrasp", "pregrasp posture");
- p.declare<boost::any>("grasp", "grasp posture");
-
- ROS_INFO_NAMED(LOGNAME, "Waiting for connection to grasp generation action server...");
- ActionBaseT::clientPtr_->waitForServer(ros::Duration(ActionBaseT::server_timeout_));
- ROS_INFO_NAMED(LOGNAME, "Connected to server");
+	ROS_INFO_NAMED(LOGNAME, "Waiting for connection to grasp generation action server...");
+	ActionBaseT::clientPtr_->waitForServer(ros::Duration(ActionBaseT::server_timeout_));
+	ROS_INFO_NAMED(LOGNAME, "Connected to server");
 }
 
-
-template<class ActionSpec>
-void DeepGraspPose<ActionSpec>::composeGoal(){
+template <class ActionSpec>
+void DeepGraspPose<ActionSpec>::composeGoal() {
 	Goal goal;
 	goal.action_name = ActionBaseT::action_name_;
-	ActionBaseT::clientPtr_->sendGoal(goal,
-	                                  std::bind(&DeepGraspPose<ActionSpec>::doneCallback, this, std::placeholders::_1, std::placeholders::_2),
-																	  std::bind(&DeepGraspPose<ActionSpec>::activeCallback, this),
-																	  std::bind(&DeepGraspPose<ActionSpec>::feedbackCallback, this, std::placeholders::_1));
+	ActionBaseT::clientPtr_->sendGoal(
+	    goal, std::bind(&DeepGraspPose<ActionSpec>::doneCallback, this, std::placeholders::_1, std::placeholders::_2),
+	    std::bind(&DeepGraspPose<ActionSpec>::activeCallback, this),
+	    std::bind(&DeepGraspPose<ActionSpec>::feedbackCallback, this, std::placeholders::_1));
 
 	ROS_INFO_NAMED(LOGNAME, "Goal sent to server: %s", ActionBaseT::action_name_.c_str());
 }
 
-
-template<class ActionSpec>
-bool DeepGraspPose<ActionSpec>::monitorGoal(){
-
+template <class ActionSpec>
+bool DeepGraspPose<ActionSpec>::monitorGoal() {
 	// monitor timeout
 	bool monitor_timeout = ActionBaseT::goal_timeout_ > std::numeric_limits<double>::epsilon() ? true : false;
 	double timeout_time = ros::Time::now().toSec() + ActionBaseT::goal_timeout_;
 
-	while(ActionBaseT::nh_.ok())
-	{
+	while (ActionBaseT::nh_.ok()) {
 		ros::spinOnce();
 
-		if (found_candidates_){
+		if (found_candidates_) {
 			break;
 		}
 
-		if (ros::Time::now().toSec() > timeout_time && monitor_timeout){
-				ActionBaseT::clientPtr_->cancelGoal();
-				ROS_ERROR_NAMED(LOGNAME, "Grasp pose generator time out reached");
-				return false;
+		if (ros::Time::now().toSec() > timeout_time && monitor_timeout) {
+			ActionBaseT::clientPtr_->cancelGoal();
+			ROS_ERROR_NAMED(LOGNAME, "Grasp pose generator time out reached");
+			return false;
 		}
 	}
 
 	return true;
 }
 
-
-template<class ActionSpec>
-void DeepGraspPose<ActionSpec>::activeCallback(){
+template <class ActionSpec>
+void DeepGraspPose<ActionSpec>::activeCallback() {
 	ROS_INFO_NAMED(LOGNAME, "Generate grasp goal now active");
 	found_candidates_ = false;
 }
 
-
-template<class ActionSpec>
-void DeepGraspPose<ActionSpec>::feedbackCallback(const FeedbackConstPtr &feedback){
+template <class ActionSpec>
+void DeepGraspPose<ActionSpec>::feedbackCallback(const FeedbackConstPtr& feedback) {
 	// each candidate should have a cost
-	if (feedback->grasp_candidates.size() != feedback->costs.size()){
+	if (feedback->grasp_candidates.size() != feedback->costs.size()) {
 		ROS_ERROR_NAMED(LOGNAME, "Invalid input: each grasp candidate needs an associated cost");
-	}
-	else{
+	} else {
 		ROS_INFO_NAMED(LOGNAME, "Grasp generated feedback received %lu candidates: ", feedback->grasp_candidates.size());
 
 		found_candidates_ = true;
@@ -208,21 +190,19 @@ void DeepGraspPose<ActionSpec>::feedbackCallback(const FeedbackConstPtr &feedbac
 	}
 }
 
-
-template<class ActionSpec>
+template <class ActionSpec>
 void DeepGraspPose<ActionSpec>::doneCallback(const actionlib::SimpleClientGoalState& state,
-													const ResultConstPtr &result){
-	if (state == actionlib::SimpleClientGoalState::SUCCEEDED){
+                                             const ResultConstPtr& result) {
+	if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
 		ROS_INFO_NAMED(LOGNAME, "Found grasp candidates (result): %s", result->grasp_state.c_str());
-	}
-	else{
-		ROS_ERROR_NAMED(LOGNAME, "No grasp candidates found (state): %s", ActionBaseT::clientPtr_->getState().toString().c_str());
+	} else {
+		ROS_ERROR_NAMED(LOGNAME, "No grasp candidates found (state): %s",
+		                ActionBaseT::clientPtr_->getState().toString().c_str());
 	}
 }
 
-
-template<class ActionSpec>
-void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model){
+template <class ActionSpec>
+void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model) {
 	InitStageException errors;
 	try {
 		GeneratePose::init(robot_model);
@@ -233,7 +213,7 @@ void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model
 	const auto& props = properties();
 
 	// check angle_delta
-	if (props.get<double>("angle_delta") == 0.){
+	if (props.get<double>("angle_delta") == 0.) {
 		errors.push_back(*this, "angle_delta must be non-zero");
 	}
 
@@ -241,30 +221,28 @@ void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model
 	props.get<std::string>("object");
 	// check availability of eef
 	const std::string& eef = props.get<std::string>("eef");
-	if (!robot_model->hasEndEffector(eef)){
+	if (!robot_model->hasEndEffector(eef)) {
 		errors.push_back(*this, "unknown end effector: " + eef);
-	}
-	else {
+	} else {
 		// check availability of eef pose
 		const moveit::core::JointModelGroup* jmg = robot_model->getEndEffector(eef);
 		const std::string& name = props.get<std::string>("pregrasp");
 		std::map<std::string, double> m;
-		if (!jmg->getVariableDefaultPositions(name, m)){
+		if (!jmg->getVariableDefaultPositions(name, m)) {
 			errors.push_back(*this, "unknown end effector pose: " + name);
 		}
 	}
 
-	if (errors){
+	if (errors) {
 		throw errors;
 	}
 }
 
-
-template<class ActionSpec>
-void DeepGraspPose<ActionSpec>::compute(){
-	if (upstream_solutions_.empty()){
-    return;
-  }
+template <class ActionSpec>
+void DeepGraspPose<ActionSpec>::compute() {
+	if (upstream_solutions_.empty()) {
+		return;
+	}
 	planning_scene::PlanningScenePtr scene = upstream_solutions_.pop()->end()->scene()->diff();
 
 	// set end effector pose
@@ -280,29 +258,27 @@ void DeepGraspPose<ActionSpec>::compute(){
 
 	// monitor feedback/results
 	// blocking function untill timeout reached or results received
-	if (monitorGoal()){
+	if (monitorGoal()) {
 		// ROS_WARN_NAMED(LOGNAME, "number %lu: ",grasp_candidates_.size());
-		for(unsigned int i = 0; i < grasp_candidates_.size(); i++)
-	  {
-	    InterfaceState state(scene);
-	    state.properties().set("target_pose", grasp_candidates_.at(i));
-	  	props.exposeTo(state.properties(), { "pregrasp", "grasp" });
+		for (unsigned int i = 0; i < grasp_candidates_.size(); i++) {
+			InterfaceState state(scene);
+			state.properties().set("target_pose", grasp_candidates_.at(i));
+			props.exposeTo(state.properties(), { "pregrasp", "grasp" });
 
-	  	SubTrajectory trajectory;
-	  	trajectory.setCost(costs_.at(i));
-	  	trajectory.setComment(std::to_string(i));
+			SubTrajectory trajectory;
+			trajectory.setCost(costs_.at(i));
+			trajectory.setComment(std::to_string(i));
 
-	  	// add frame at target pose
-	    rviz_marker_tools::appendFrame(trajectory.markers(), grasp_candidates_.at(i), 0.1, "grasp frame");
+			// add frame at target pose
+			rviz_marker_tools::appendFrame(trajectory.markers(), grasp_candidates_.at(i), 0.1, "grasp frame");
 
-	    spawn(std::move(state), std::move(trajectory));
-	  }
+			spawn(std::move(state), std::move(trajectory));
+		}
 	}
 }
 
-
-template<class ActionSpec>
-void DeepGraspPose<ActionSpec>::onNewSolution(const SolutionBase& s){
+template <class ActionSpec>
+void DeepGraspPose<ActionSpec>::onNewSolution(const SolutionBase& s) {
 	planning_scene::PlanningSceneConstPtr scene = s.end()->scene();
 
 	const auto& props = properties();
@@ -315,7 +291,7 @@ void DeepGraspPose<ActionSpec>::onNewSolution(const SolutionBase& s){
 			solution.markAsFailure();
 			solution.setComment(msg);
 			spawn(std::move(state), std::move(solution));
-		} else{
+		} else {
 			ROS_WARN_STREAM_NAMED(LOGNAME, msg);
 		}
 		return;

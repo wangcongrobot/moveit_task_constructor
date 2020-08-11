@@ -41,7 +41,6 @@
 
 #include <actionlib/client/simple_action_client.h>
 
-
 namespace moveit {
 namespace task_constructor {
 namespace stages {
@@ -52,80 +51,72 @@ namespace stages {
 * @details Some stages may require an action client. This class wraps the
 *          simple client action interface and exposes event based execution callbacks.
 */
-template<class ActionSpec>
+template <class ActionSpec>
 class ActionBase
 {
 protected:
-  ACTION_DEFINITION(ActionSpec);
+	ACTION_DEFINITION(ActionSpec);
 
 public:
-  /**
-  * @brief Constructor
-  * @param action_name - action namespace
-  * @param spin_thread - spins a thread to service this action's subscriptions
-  * @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
-  * @param server_timeout - connection to server time out (0 is considered infinite timeout)
-  * @details Initialize the action client and time out parameters
-  */
-  ActionBase(const std::string &action_name,
-             bool spin_thread,
-             double goal_timeout,
-             double server_timeout);
+	/**
+	* @brief Constructor
+	* @param action_name - action namespace
+	* @param spin_thread - spins a thread to service this action's subscriptions
+	* @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
+	* @param server_timeout - connection to server time out (0 is considered infinite timeout)
+	* @details Initialize the action client and time out parameters
+	*/
+	ActionBase(const std::string& action_name, bool spin_thread, double goal_timeout, double server_timeout);
 
-  /**
-  * @brief Constructor
-  * @param action_name - action namespace
-  * @param spin_thread - spins a thread to service this action's subscriptions
-  * @details Initialize the action client and time out parameters to infinity
-  */
-  ActionBase(const std::string &action_name, bool spin_thread);
+	/**
+	* @brief Constructor
+	* @param action_name - action namespace
+	* @param spin_thread - spins a thread to service this action's subscriptions
+	* @details Initialize the action client and time out parameters to infinity
+	*/
+	ActionBase(const std::string& action_name, bool spin_thread);
 
-  /* @brief Destructor */
-  virtual ~ActionBase() = default;
+	/* @brief Destructor */
+	virtual ~ActionBase() = default;
 
-  /* @brief Called when goal becomes active */
-  virtual void activeCallback() = 0;
+	/* @brief Called when goal becomes active */
+	virtual void activeCallback() = 0;
 
-  /**
-  * @brief Called every time feedback is received for the goal
-  * @param feedback - pointer to the feedback message
-  */
-  virtual void feedbackCallback(const FeedbackConstPtr &feedback) = 0;
+	/**
+	* @brief Called every time feedback is received for the goal
+	* @param feedback - pointer to the feedback message
+	*/
+	virtual void feedbackCallback(const FeedbackConstPtr& feedback) = 0;
 
-  /**
-  * @brief Called once when the goal completes
-  * @param state - state info for goal
-  * @param result - pointer to result message
-  */
-  virtual void doneCallback(const actionlib::SimpleClientGoalState& state,
-                            const ResultConstPtr &result) = 0;
+	/**
+	* @brief Called once when the goal completes
+	* @param state - state info for goal
+	* @param result - pointer to result message
+	*/
+	virtual void doneCallback(const actionlib::SimpleClientGoalState& state, const ResultConstPtr& result) = 0;
 
 protected:
-  ros::NodeHandle nh_;
-  std::string action_name_;                                                // action name space
-  std::unique_ptr<actionlib::SimpleActionClient<ActionSpec>> clientPtr_;   // action client
-  double server_timeout_, goal_timeout_;                                   // connection and goal completed time out
+	ros::NodeHandle nh_;
+	std::string action_name_;  // action name space
+	std::unique_ptr<actionlib::SimpleActionClient<ActionSpec>> clientPtr_;  // action client
+	double server_timeout_, goal_timeout_;  // connection and goal completed time out
 };
 
-
-template<class ActionSpec>
-ActionBase<ActionSpec>::ActionBase(const std::string &action_name,
-                                   bool spin_thread,
-                                   double goal_timeout,
+template <class ActionSpec>
+ActionBase<ActionSpec>::ActionBase(const std::string& action_name, bool spin_thread, double goal_timeout,
                                    double server_timeout)
-           : action_name_(action_name), server_timeout_(server_timeout), goal_timeout_(goal_timeout){
-  clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(nh_, action_name_, spin_thread));
+  : action_name_(action_name), server_timeout_(server_timeout), goal_timeout_(goal_timeout) {
+	clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(nh_, action_name_, spin_thread));
 
-  if (server_timeout_ < 0.0 || goal_timeout < 0.0){
-    ROS_WARN("Timeouts cannot be negative");
-    }
+	if (server_timeout_ < 0.0 || goal_timeout < 0.0) {
+		ROS_WARN("Timeouts cannot be negative");
+	}
 }
 
-
-template<class ActionSpec>
-ActionBase<ActionSpec>::ActionBase(const std::string &action_name, bool spin_thread)
-           : action_name_(action_name), server_timeout_(0.0), goal_timeout_(0.0){
-clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(nh_, action_name_, spin_thread));
+template <class ActionSpec>
+ActionBase<ActionSpec>::ActionBase(const std::string& action_name, bool spin_thread)
+  : action_name_(action_name), server_timeout_(0.0), goal_timeout_(0.0) {
+	clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(nh_, action_name_, spin_thread));
 }
 
 }  // namespace stages
