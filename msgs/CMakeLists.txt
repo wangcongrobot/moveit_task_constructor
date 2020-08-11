@@ -30,7 +30,7 @@ add_service_files(DIRECTORY srv FILES
 
 add_action_files(DIRECTORY action FILES
 	ExecuteTaskSolution.action
-	GenerateDeepGraspPose.action
+	SampleGraspPoses.action
 )
 
 generate_messages(DEPENDENCIES
