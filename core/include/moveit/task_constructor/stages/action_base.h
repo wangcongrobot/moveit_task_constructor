@@ -1,7 +1,7 @@
 /*********************************************************************
  * BSD 3-Clause License
  *
- * Copyright (c) 2020 PickNik LLC.
+ * Copyright (c) 2020 PickNik Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
