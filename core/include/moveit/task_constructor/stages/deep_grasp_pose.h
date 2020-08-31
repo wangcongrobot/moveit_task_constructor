@@ -43,9 +43,9 @@
 #include <rviz_marker_tools/marker_creation.h>
 #include <moveit/planning_scene/planning_scene.h>
 
-#include <memory>
+// #include <memory>
 #include <functional>
-#include <iostream>
+// #include <iostream>
 
 namespace moveit {
 namespace task_constructor {
@@ -84,9 +84,9 @@ public:
 
 	/**
 	* @brief Monitors status of action goal
-	* @return true if grasp candidates are received within (optinal) timeout
+	* @return true if grasp candidates are received within (optional) timeout
 	* @details This is a blocking call. It will wait until either grasp candidates
-	*          are received or the (optinal) timeout has been reached.
+	*          are received or the timeout has been reached.
 	*/
 	bool monitorGoal();
 
@@ -121,8 +121,6 @@ DeepGraspPose<ActionSpec>::DeepGraspPose(const std::string& action_name, const s
 	auto& p = properties();
 	p.declare<std::string>("eef", "name of end-effector");
 	p.declare<std::string>("object");
-	p.declare<double>("angle_delta", 0.1, "angular steps (rad)");
-
 	p.declare<boost::any>("pregrasp", "pregrasp posture");
 	p.declare<boost::any>("grasp", "grasp posture");
 
@@ -146,20 +144,21 @@ void DeepGraspPose<ActionSpec>::composeGoal() {
 template <class ActionSpec>
 bool DeepGraspPose<ActionSpec>::monitorGoal() {
 	// monitor timeout
-	bool monitor_timeout = ActionBaseT::goal_timeout_ > std::numeric_limits<double>::epsilon() ? true : false;
-	double timeout_time = ros::Time::now().toSec() + ActionBaseT::goal_timeout_;
+	const bool monitor_timeout = ActionBaseT::goal_timeout_ > std::numeric_limits<double>::epsilon() ? true : false;
+	const double timeout_time = ros::Time::now().toSec() + ActionBaseT::goal_timeout_;
 
 	while (ActionBaseT::nh_.ok()) {
 		ros::spinOnce();
 
-		if (found_candidates_) {
-			break;
-		}
-
+		// timeout reached
 		if (ros::Time::now().toSec() > timeout_time && monitor_timeout) {
 			ActionBaseT::clientPtr_->cancelGoal();
 			ROS_ERROR_NAMED(LOGNAME, "Grasp pose generator time out reached");
 			return false;
+		} else if (found_candidates_){
+				// timeout not reached (or not active) and grasps are found
+				// only way return true
+				break;
 		}
 	}
 
@@ -180,13 +179,13 @@ void DeepGraspPose<ActionSpec>::feedbackCallback(const FeedbackConstPtr& feedbac
 	} else {
 		ROS_INFO_NAMED(LOGNAME, "Grasp generated feedback received %lu candidates: ", feedback->grasp_candidates.size());
 
-		found_candidates_ = true;
-
 		grasp_candidates_.resize(feedback->grasp_candidates.size());
 		costs_.resize(feedback->costs.size());
 
 		grasp_candidates_ = feedback->grasp_candidates;
 		costs_ = feedback->costs;
+
+		found_candidates_ = true;
 	}
 }
 
@@ -211,11 +210,6 @@ void DeepGraspPose<ActionSpec>::init(const core::RobotModelConstPtr& robot_model
 	}
 
 	const auto& props = properties();
-
-	// check angle_delta
-	if (props.get<double>("angle_delta") == 0.) {
-		errors.push_back(*this, "angle_delta must be non-zero");
-	}
 
 	// check availability of object
 	props.get<std::string>("object");
@@ -282,7 +276,7 @@ void DeepGraspPose<ActionSpec>::onNewSolution(const SolutionBase& s) {
 	planning_scene::PlanningSceneConstPtr scene = s.end()->scene();
 
 	const auto& props = properties();
-	const std::string& object = props.template get<std::string>("object");
+	const std::string& object = props.get<std::string>("object");
 	if (!scene->knowsFrameTransform(object)) {
 		const std::string msg = "object '" + object + "' not in scene";
 		if (storeFailures()) {

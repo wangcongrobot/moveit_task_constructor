@@ -38,6 +38,7 @@
 
 #include <memory>
 #include <string>
+#include <limits>
 
 #include <actionlib/client/simple_action_client.h>
 
@@ -108,9 +109,9 @@ ActionBase<ActionSpec>::ActionBase(const std::string& action_name, bool spin_thr
   : action_name_(action_name), server_timeout_(server_timeout), goal_timeout_(goal_timeout) {
 	clientPtr_.reset(new actionlib::SimpleActionClient<ActionSpec>(nh_, action_name_, spin_thread));
 
-	if (server_timeout_ < 0.0 || goal_timeout < 0.0) {
-		ROS_WARN("Timeouts cannot be negative");
-	}
+	// Negative timeouts are set to zero
+	server_timeout_ = server_timeout_ < std::numeric_limits<double>::epsilon() ? 0.0 : server_timeout_;
+	goal_timeout_ = goal_timeout_ < std::numeric_limits<double>::epsilon() ? 0.0 : goal_timeout_;
 }
 
 template <class ActionSpec>
