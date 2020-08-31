@@ -54,10 +54,10 @@ namespace stages {
 constexpr char LOGNAME[] = "deep_grasp_generator";
 
 /**
-* @brief Generate grasp candidates using deep learning approaches
-* @param ActionSpec - action message (action message name + "ACTION")
-* @details Interfaces with a deep learning based grasp library using a action client
-*/
+ * @brief Generate grasp candidates using deep learning approaches
+ * @param ActionSpec - action message (action message name + "ACTION")
+ * @details Interfaces with a deep learning based grasp library using a action client
+ */
 template <class ActionSpec>
 class DeepGraspPose : public GeneratePose, ActionBase<ActionSpec>
 {
@@ -67,27 +67,27 @@ private:
 
 public:
 	/**
-	* @brief Constructor
-	* @param action_name - action namespace
-	* @param stage_name - name of stage
-	* @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
-  * @param server_timeout - connection to server time out (0 is considered infinite timeout)
-	* @details Initialize the client and connect to server
-	*/
+	 * @brief Constructor
+	 * @param action_name - action namespace
+	 * @param stage_name - name of stage
+	 * @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
+	 * @param server_timeout - connection to server time out (0 is considered infinite timeout)
+	 * @details Initialize the client and connect to server
+	 */
 	DeepGraspPose(const std::string& action_name, const std::string& stage_name = "generate grasp pose",
 	              double goal_timeout = 0.0, double server_timeout = 0.0);
 
 	/**
-	* @brief Composes the action goal and sends to server
-	*/
+	 * @brief Composes the action goal and sends to server
+	 */
 	void composeGoal();
 
 	/**
-	* @brief Monitors status of action goal
-	* @return true if grasp candidates are received within (optional) timeout
-	* @details This is a blocking call. It will wait until either grasp candidates
-	*          are received or the timeout has been reached.
-	*/
+	 * @brief Monitors status of action goal
+	 * @return true if grasp candidates are received within (optional) timeout
+	 * @details This is a blocking call. It will wait until either grasp candidates
+	 *          are received or the timeout has been reached.
+	 */
 	bool monitorGoal();
 
 	void activeCallback() override;
@@ -155,10 +155,10 @@ bool DeepGraspPose<ActionSpec>::monitorGoal() {
 			ActionBaseT::clientPtr_->cancelGoal();
 			ROS_ERROR_NAMED(LOGNAME, "Grasp pose generator time out reached");
 			return false;
-		} else if (found_candidates_){
-				// timeout not reached (or not active) and grasps are found
-				// only way return true
-				break;
+		} else if (found_candidates_) {
+			// timeout not reached (or not active) and grasps are found
+			// only way return true
+			break;
 		}
 	}
 

@@ -47,11 +47,11 @@ namespace task_constructor {
 namespace stages {
 
 /**
-* @brief Interface allowing stages to use a simple action client
-* @param ActionSpec - action message (action message name + "ACTION")
-* @details Some stages may require an action client. This class wraps the
-*          simple client action interface and exposes event based execution callbacks.
-*/
+ * @brief Interface allowing stages to use a simple action client
+ * @param ActionSpec - action message (action message name + "ACTION")
+ * @details Some stages may require an action client. This class wraps the
+ *          simple client action interface and exposes event based execution callbacks.
+ */
 template <class ActionSpec>
 class ActionBase
 {
@@ -60,21 +60,21 @@ protected:
 
 public:
 	/**
-	* @brief Constructor
-	* @param action_name - action namespace
-	* @param spin_thread - spins a thread to service this action's subscriptions
-	* @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
-	* @param server_timeout - connection to server time out (0 is considered infinite timeout)
-	* @details Initialize the action client and time out parameters
-	*/
+	 * @brief Constructor
+	 * @param action_name - action namespace
+	 * @param spin_thread - spins a thread to service this action's subscriptions
+	 * @param goal_timeout - goal to completed time out (0 is considered infinite timeout)
+	 * @param server_timeout - connection to server time out (0 is considered infinite timeout)
+	 * @details Initialize the action client and time out parameters
+	 */
 	ActionBase(const std::string& action_name, bool spin_thread, double goal_timeout, double server_timeout);
 
 	/**
-	* @brief Constructor
-	* @param action_name - action namespace
-	* @param spin_thread - spins a thread to service this action's subscriptions
-	* @details Initialize the action client and time out parameters to infinity
-	*/
+	 * @brief Constructor
+	 * @param action_name - action namespace
+	 * @param spin_thread - spins a thread to service this action's subscriptions
+	 * @details Initialize the action client and time out parameters to infinity
+	 */
 	ActionBase(const std::string& action_name, bool spin_thread);
 
 	/* @brief Destructor */
@@ -84,16 +84,16 @@ public:
 	virtual void activeCallback() = 0;
 
 	/**
-	* @brief Called every time feedback is received for the goal
-	* @param feedback - pointer to the feedback message
-	*/
+	 * @brief Called every time feedback is received for the goal
+	 * @param feedback - pointer to the feedback message
+	 */
 	virtual void feedbackCallback(const FeedbackConstPtr& feedback) = 0;
 
 	/**
-	* @brief Called once when the goal completes
-	* @param state - state info for goal
-	* @param result - pointer to result message
-	*/
+	 * @brief Called once when the goal completes
+	 * @param state - state info for goal
+	 * @param result - pointer to result message
+	 */
 	virtual void doneCallback(const actionlib::SimpleClientGoalState& state, const ResultConstPtr& result) = 0;
 
 protected:
