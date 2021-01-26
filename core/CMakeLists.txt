@@ -3,7 +3,6 @@ project(moveit_task_constructor_core)
 
 find_package(Boost REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
-	actionlib
 	eigen_conversions
 	geometry_msgs
 	moveit_core
@@ -25,21 +24,10 @@ catkin_package(
 		geometry_msgs
 		moveit_core
 		moveit_task_constructor_msgs
-		rviz_marker_tools
 		visualization_msgs
 )
 
-<<<<<<< HEAD
 set(CMAKE_CXX_STANDARD 14)
-=======
-include_directories(${catkin_INCLUDE_DIRS})
-
-if ("${CMAKE_VERSION}" VERSION_LESS "3.1")
-	add_compile_options(-std=c++14)
-else ()
-	set(CMAKE_CXX_STANDARD 14)
-endif ()
->>>>>>> catkin_lint error fixed
 
 # check for MOVEIT_MASTER
 include(CheckIncludeFileCXX)
